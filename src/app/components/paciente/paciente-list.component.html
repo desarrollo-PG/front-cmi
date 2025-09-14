@@ -1,0 +1,733 @@
+<!-- paciente-list.component.html -->
+<div class="content-area" [class.sidebar-expanded]="barraLateralExpandida">
+  <!-- Sidebar con información del usuario corregida -->
+  <app-sidebar [informacionUsuario]="informacionUsuario"></app-sidebar>
+  
+  <div class="contenedor-menu">
+    <header class="encabezado">
+      <div class="contenido-encabezado">
+        <div class="izquierda-encabezado">
+          <div class="texto-encabezado">
+            <h1 class="titulo">PACIENTES</h1>
+          </div>
+          <img src="assets/img/LogoFraijanes.png" alt="Logo Fraijanes" class="logo">
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <!-- Indicador de subida de archivos -->
+  <div *ngIf="subiendoArchivos" class="estado-subida">
+    <div class="indicador-subida">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Subiendo archivos...</span>
+    </div>
+  </div>
+
+  <!-- Controles de búsqueda -->
+  <div class="tarjeta-control">
+    <div class="controles-busqueda">
+      <div class="contenedor-busqueda">
+        <input 
+          type="text" 
+          class="entrada-busqueda" 
+          placeholder="Buscar"
+          [(ngModel)]="terminoBusqueda"
+          (input)="filtrarPacientes()"
+        >
+        <button class="boton-agregar" (click)="mostrarFormulario()" *ngIf="vistaActual === 'lista'">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      
+      <div class="informacion-encabezado">
+        <div class="informacion-fecha">
+          Fecha: {{ fechaActual | date:'dd/MM/yyyy' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Lista de pacientes -->
+<div class="contenedor-tabla" *ngIf="vistaActual === 'lista'">
+  <table class="tabla-datos">
+    <thead>
+      <tr>
+        <th>Nombre del Paciente</th>
+        <th>Género</th>
+        <th>Edad</th>
+        <th>CUI</th>
+        <th>Teléfono</th>
+        <th>Historial</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let paciente of paginatedPacientes; let i = index" class="fila-tabla">
+        <td class="nombre-usuario">
+          {{ paciente.nombres }} {{ paciente.apellidos }}
+        </td>
+        <td>{{ paciente.genero === 'M' ? 'Masculino' : 'Femenino' }}</td>
+        <td>{{ calcularEdad(paciente.fechanacimiento) }} años</td>
+        <td>{{ paciente.cui }}</td>
+        <td>{{ paciente.telefonopersonal || 'No registrado' }}</td>
+        <td>
+          <span *ngIf="obtenerInformacionExpedientePaciente(paciente).tieneExpediente" 
+                class="insignia-expediente expediente-existe">
+            <i class="fas fa-file-medical"></i>
+            {{ obtenerInformacionExpedientePaciente(paciente).numeroExpediente }}
+          </span>
+          <span *ngIf="!obtenerInformacionExpedientePaciente(paciente).tieneExpediente" 
+                class="insignia-expediente expediente-faltante">
+            <i class="fas fa-file-plus"></i>
+            Asignar Expediente
+          </span>
+        </td>
+        <!-- NUEVA COLUMNA DE ACCIONES CON MENÚ DE TRES PUNTOS -->
+        <td class="columna-acciones">
+          <div class="menu-tres-puntos" [class.activo]="menuAbierto === i">
+            <!-- Botón de tres puntos -->
+            <button 
+              class="boton-tres-puntos"
+              (click)="toggleMenu(i); $event.stopPropagation()"
+              type="button"
+            >
+              <span class="punto"></span>
+              <span class="punto"></span>
+              <span class="punto"></span>
+            </button>
+            
+            <!-- Menú contextual -->
+            <div class="menu-contextual" *ngIf="menuAbierto === i">
+              <div class="menu-header">
+                <span class="paciente-nombre">{{ paciente.nombres }} {{ paciente.apellidos }}</span>
+              </div>
+              
+              <div class="menu-items">
+                <button 
+                  class="menu-item historial" 
+                  (click)="verHistorialClinico(paciente); cerrarMenu()"
+                  type="button"
+                >
+                  <div class="item-icono">📋</div>
+                  <div class="item-texto">
+                    <span class="item-titulo">Historial Clínico</span>
+                    <span class="item-desc">Ver historial médico</span>
+                  </div>
+                </button>
+                
+                <button 
+                  class="menu-item editar" 
+                  (click)="editarPaciente(paciente); cerrarMenu()"
+                  type="button"
+                >
+                  <div class="item-icono">✏️</div>
+                  <div class="item-texto">
+                    <span class="item-titulo">Editar Paciente</span>
+                    <span class="item-desc">Modificar información</span>
+                  </div>
+                </button>
+                
+                <button 
+                  *ngIf="!obtenerInformacionExpedientePaciente(paciente).tieneExpediente"
+                  class="menu-item expediente" 
+                  (click)="crearExpedientePaciente(paciente); cerrarMenu()"
+                  type="button"
+                >
+                  <div class="item-icono">📄</div>
+                  <div class="item-texto">
+                    <span class="item-titulo">Crear Expediente</span>
+                    <span class="item-desc">Nuevo expediente médico</span>
+                  </div>
+                </button>
+                
+                <button 
+                  *ngIf="obtenerInformacionExpedientePaciente(paciente).tieneExpediente"
+                  class="menu-item expediente" 
+                  (click)="verExpedientePaciente(paciente); cerrarMenu()"
+                  type="button"
+                >
+                  <div class="item-icono">👁️</div>
+                  <div class="item-texto">
+                    <span class="item-titulo">Ver Expediente</span>
+                    <span class="item-desc">Expediente #{{ obtenerInformacionExpedientePaciente(paciente).numeroExpediente }}</span>
+                  </div>
+                </button>
+                
+                <div class="menu-separador"></div>
+                
+                <button 
+                  class="menu-item eliminar" 
+                  (click)="eliminarPaciente(paciente.idpaciente!); cerrarMenu()"
+                  type="button"
+                >
+                  <div class="item-icono">🗑️</div>
+                  <div class="item-texto">
+                    <span class="item-titulo">Eliminar Paciente</span>
+                    <span class="item-desc">Eliminar permanentemente</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Resto del código de paginación permanece igual... -->
+  <div class="pagination-container" *ngIf="totalItems > 0">
+    <!-- Navegación de páginas (solo si hay más de 1 página) -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <!-- Botón anterior -->
+      <button 
+        class="pagination-btn" 
+        [class.disabled]="currentPage === 1"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <!-- Primera página -->
+      <button 
+        *ngIf="getPages()[0] > 1"
+        class="pagination-btn"
+        (click)="goToPage(1)"
+      >
+        1
+      </button>
+      
+      <!-- Puntos suspensivos si hay salto -->
+      <span *ngIf="getPages()[0] > 2" class="pagination-dots">...</span>
+
+      <!-- Páginas visibles -->
+      <button 
+        *ngFor="let page of getPages()"
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+
+      <!-- Puntos suspensivos si hay salto al final -->
+      <span *ngIf="getPages()[getPages().length - 1] < totalPages - 1" class="pagination-dots">...</span>
+
+      <!-- Última página -->
+      <button 
+        *ngIf="getPages()[getPages().length - 1] < totalPages"
+        class="pagination-btn"
+        (click)="goToPage(totalPages)"
+      >
+        {{ totalPages }}
+      </button>
+
+      <!-- Botón siguiente -->
+      <button 
+        class="pagination-btn" 
+        [class.disabled]="currentPage === totalPages"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Mostrar mensaje si solo hay una página -->
+    <div *ngIf="totalPages <= 1" class="pagination-single">
+      Página 1 de 1
+    </div>
+
+    <!-- Selector de elementos por página -->
+    <div class="items-per-page">
+      <label>Mostrar:</label>
+      <select [(ngModel)]="itemsPerPage" (ngModelChange)="onItemsPerPageChange()">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+      </select>
+      <span>por página</span>
+    </div>
+  </div>
+  
+  <!-- Estado sin datos -->
+  <div *ngIf="pacientesFiltrados.length === 0 && !cargando" class="estado-vacio">
+    <i class="fas fa-users"></i>
+    <h3>No se encontraron pacientes</h3>
+    <p>No hay pacientes que coincidan con su búsqueda</p>
+  </div>
+</div>
+
+  <!-- Modal de formulario -->
+  <div class="fondo-modal" *ngIf="vistaActual === 'formulario'" (click)="cerrarModal()">
+    <div class="contenido-modal-grande" (click)="$event.stopPropagation()">
+      
+      <!-- Encabezado del modal -->
+      <div class="encabezado-modal">
+        <h3>{{ modoEdicion ? 'Editar Paciente' : 'Nuevo Paciente' }}</h3>
+        <button class="cerrar-modal" (click)="cerrarModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Cuerpo del modal con scroll -->
+      <div class="cuerpo-modal-scroll">
+        
+        <!-- Sección de fotografías -->
+        <div class="seccion-fotos">
+          <h4 class="titulo-seccion">
+            <i class="fas fa-images"></i> Fotografías
+          </h4>
+          
+          <div class="contenedor-fotos">
+            <!-- Foto del paciente -->
+            <div class="tarjeta-foto">
+              <div class="vista-previa-foto-circulo">
+                <img *ngIf="fotoSeleccionada" [src]="fotoSeleccionada" alt="Foto Paciente" class="imagen-foto-circulo">
+                <div *ngIf="!fotoSeleccionada" class="marcador-posicion-foto-circulo">
+                  <i class="fas fa-user"></i>
+                </div>
+              </div>
+              <label class="etiqueta-foto">Foto del paciente</label>
+              <input 
+                type="file" 
+                #entradaArchivoPaciente 
+                (change)="alSeleccionarFoto($event, 'perfil')" 
+                accept="image/*" 
+                style="display: none;"
+              >
+              <button type="button" class="boton-subir-foto" (click)="entradaArchivoPaciente.click()">
+                <i class="fas fa-camera"></i>
+                {{ fotoSeleccionada ? 'Cambiar Foto' : 'Seleccionar Foto' }}
+              </button>
+              <button 
+                *ngIf="fotoSeleccionada" 
+                type="button" 
+                class="boton-eliminar-foto" 
+                (click)="eliminarFoto('perfil')"
+              >
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </div>
+
+            <!-- Foto del encargado -->
+            <div class="tarjeta-foto">
+              <div class="vista-previa-foto-circulo">
+                <img *ngIf="fotoEncargadoSeleccionada" [src]="fotoEncargadoSeleccionada" alt="Foto Encargado" class="imagen-foto-circulo">
+                <div *ngIf="!fotoEncargadoSeleccionada" class="marcador-posicion-foto-circulo">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+              </div>
+              <label class="etiqueta-foto">Foto del encargado</label>
+              <input 
+                type="file" 
+                #entradaArchivoEncargado 
+                (change)="alSeleccionarFoto($event, 'encargado')" 
+                accept="image/*" 
+                style="display: none;"
+              >
+              <button type="button" class="boton-subir-foto" (click)="entradaArchivoEncargado.click()">
+                <i class="fas fa-camera"></i>
+                {{ fotoEncargadoSeleccionada ? 'Cambiar Foto' : 'Seleccionar Foto' }}
+              </button>
+              <button 
+                *ngIf="fotoEncargadoSeleccionada" 
+                type="button" 
+                class="boton-eliminar-foto" 
+                (click)="eliminarFoto('encargado')"
+              >
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de documentos -->
+        <div class="seccion-documentos">
+          <h4 class="titulo-seccion">
+            <i class="fas fa-file-contract"></i> Documentos Adicionales (Opcional)
+          </h4>
+          
+          <div class="tarjeta-documento">
+            <div class="contenedor-vista-previa-documento">
+              <div class="vista-previa-documento" *ngIf="cartaSeleccionada">
+                <div class="icono-documento" *ngIf="esCartaPDF">
+                  <i class="fas fa-file-pdf"></i>
+                  <span>PDF</span>
+                </div>
+                <img *ngIf="!esCartaPDF" [src]="cartaSeleccionada" alt="Carta Autorización" class="imagen-documento">
+              </div>
+              <div *ngIf="!cartaSeleccionada" class="marcador-posicion-documento">
+                <i class="fas fa-file-upload"></i>
+                <span>Carta de Autorización</span>
+                <small>Formatos: JPG, PNG, PDF</small>
+              </div>
+            </div>
+            
+            <div class="acciones-documento">
+              <input 
+                type="file" 
+                #entradaArchivoCarta 
+                (change)="alSeleccionarFoto($event, 'carta')" 
+                accept="image/*,application/pdf" 
+                style="display: none;"
+              >
+              <button type="button" class="boton-subir-documento" (click)="entradaArchivoCarta.click()">
+                <i class="fas fa-upload"></i>
+                {{ cartaSeleccionada ? 'Cambiar Documento' : 'Subir Documento' }}
+              </button>
+              <button 
+                *ngIf="cartaSeleccionada" 
+                type="button" 
+                class="boton-eliminar-documento" 
+                (click)="eliminarFoto('carta')"
+              >
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario de datos del paciente -->
+        <form [formGroup]="formularioPaciente" class="formulario-usuario">
+          
+          <!-- Información personal -->
+          <div class="seccion-formulario">
+            <h4 class="titulo-seccion">
+              <i class="fas fa-user"></i> Información Personal
+            </h4>
+            <div class="grilla-formulario">
+              <div class="grupo-formulario">
+                <label>Nombres *</label>
+                <input 
+                  type="text" 
+                  formControlName="nombres"
+                  class="entrada-formulario"
+                  [class.error]="esCampoInvalido('nombres')"
+                  placeholder="Ingrese los nombres completos"
+                >
+                <div *ngIf="esCampoInvalido('nombres')" class="texto-error">{{ obtenerErrorCampo('nombres') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Apellidos *</label>
+                <input 
+                  type="text" 
+                  formControlName="apellidos"
+                  class="entrada-formulario"
+                  [class.error]="esCampoInvalido('apellidos')"
+                  placeholder="Ingrese los apellidos completos"
+                >
+                <div *ngIf="esCampoInvalido('apellidos')" class="texto-error">{{ obtenerErrorCampo('apellidos') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>CUI (Código Único de Identificación) *</label>
+                <input 
+                  type="text" 
+                  formControlName="cui"
+                  class="entrada-formulario"
+                  [class.error]="esCampoInvalido('cui')"
+                  placeholder="1234567890123 (13 dígitos)"
+                  maxlength="13"
+                >
+                <div *ngIf="esCampoInvalido('cui')" class="texto-error">{{ obtenerErrorCampo('cui') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Fecha de Nacimiento *</label>
+                <input 
+                  type="date" 
+                  formControlName="fechanacimiento"
+                  class="entrada-formulario"
+                  [class.error]="esCampoInvalido('fechanacimiento')"
+                >
+                <div *ngIf="esCampoInvalido('fechanacimiento')" class="texto-error">{{ obtenerErrorCampo('fechanacimiento') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Género *</label>
+                <select formControlName="genero" class="entrada-formulario" [class.error]="esCampoInvalido('genero')">
+                  <option value="">Seleccionar género</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+                <div *ngIf="esCampoInvalido('genero')" class="texto-error">{{ obtenerErrorCampo('genero') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Tipo de Consulta *</label>
+                <input 
+                  type="text" 
+                  formControlName="tipoconsulta" 
+                  class="entrada-formulario" 
+                  [class.error]="esCampoInvalido('tipoconsulta')"
+                  placeholder="Ej: Primera vez, Subsecuente, Urgencia"
+                  list="listaTipoConsulta"
+                >
+                <datalist id="listaTipoConsulta">
+                  <option value="Primera vez">
+                  <option value="Subsecuente">
+                  <option value="Urgencia">
+                  <option value="Consulta General">
+                  <option value="Control">
+                </datalist>
+                <div *ngIf="esCampoInvalido('tipoconsulta')" class="texto-error">{{ obtenerErrorCampo('tipoconsulta') }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de contacto -->
+          <div class="seccion-formulario">
+            <h4 class="titulo-seccion">
+              <i class="fas fa-phone"></i> Información de Contacto
+            </h4>
+            <div class="grilla-formulario">
+              <div class="grupo-formulario">
+                <label>Teléfono Personal</label>
+                <input 
+                  type="text" 
+                  formControlName="telefonopersonal"
+                  class="entrada-formulario"
+                  placeholder="+502 4444-4444"
+                  maxlength="14"
+                  (input)="formatearTelefono('telefonopersonal')"
+                >
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Nombre del Contacto de Emergencia</label>
+                <input 
+                  type="text" 
+                  formControlName="nombrecontactoemergencia"
+                  class="entrada-formulario"
+                  placeholder="Nombre completo del contacto"
+                >
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Teléfono de Emergencia</label>
+                <input 
+                  type="text" 
+                  formControlName="telefonoemergencia"
+                  class="entrada-formulario"
+                  placeholder="+502 4444-4444"
+                  maxlength="14"
+                  (input)="formatearTelefono('telefonoemergencia')"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Información del encargado -->
+          <div class="seccion-formulario">
+            <h4 class="titulo-seccion">
+              <i class="fas fa-user-friends"></i> Información del Encargado/Responsable
+            </h4>
+            <div class="grilla-formulario">
+              <div class="grupo-formulario">
+                <label>Nombre del Encargado</label>
+                <input 
+                  type="text" 
+                  formControlName="nombreencargado"
+                  class="entrada-formulario"
+                  placeholder="Nombre completo del encargado o responsable"
+                >
+              </div>
+
+              <div class="grupo-formulario">
+                <label>DPI del Encargado</label>
+                <input 
+                  type="text" 
+                  formControlName="dpiencargado"
+                  class="entrada-formulario"
+                  placeholder="1234567890101"
+                  maxlength="13"
+                >
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Teléfono del Encargado</label>
+                <input 
+                  type="text" 
+                  formControlName="telefonoencargado"
+                  class="entrada-formulario"
+                  placeholder="+502 4444-4444"
+                  maxlength="14"
+                  (input)="formatearTelefono('telefonoencargado')"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="seccion-formulario">
+            <h4 class="titulo-seccion">
+              <i class="fas fa-info-circle"></i> Información Médica Adicional
+            </h4>
+            <div class="grilla-formulario">
+              <div class="grupo-formulario">
+                <label>Tipo de Discapacidad</label>
+                <input 
+                  type="text" 
+                  formControlName="tipodiscapacidad" 
+                  class="entrada-formulario"
+                  placeholder="Ej: Ninguna, Física, Visual, Auditiva"
+                  list="listaTipoDiscapacidad"
+                >
+                <datalist id="listaTipoDiscapacidad">
+                  <option value="Ninguna">
+                  <option value="Física">
+                  <option value="Visual">
+                  <option value="Auditiva">
+                  <option value="Intelectual">
+                  <option value="Psicosocial">
+                  <option value="Múltiple">
+                  <option value="Otra">
+                </datalist>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de dirección -->
+          <div class="seccion-formulario">
+            <h4 class="titulo-seccion">
+              <i class="fas fa-map-marker-alt"></i> Información de Ubicación
+            </h4>
+            <div class="grilla-formulario">
+              <div class="grupo-formulario">
+                <label>Municipio *</label>
+                <input 
+                  type="text" 
+                  formControlName="municipio"
+                  class="entrada-formulario"
+                  [class.error]="esCampoInvalido('municipio')"
+                  placeholder="Nombre del municipio"
+                >
+                <div *ngIf="esCampoInvalido('municipio')" class="texto-error">{{ obtenerErrorCampo('municipio') }}</div>
+              </div>
+
+              <div class="grupo-formulario">
+                <label>Aldea/Zona/Colonia</label>
+                <input 
+                  type="text" 
+                  formControlName="aldea"
+                  class="entrada-formulario"
+                  placeholder="Aldea, zona o colonia"
+                >
+              </div>
+
+              <div class="grupo-formulario ancho-completo">
+                <label>Dirección Completa *</label>
+                <textarea
+                  formControlName="direccion"
+                  class="area-texto-formulario"
+                  [class.error]="esCampoInvalido('direccion')"
+                  rows="3"
+                  placeholder="Ingrese la dirección detallada del paciente"
+                ></textarea>
+                <div *ngIf="esCampoInvalido('direccion')" class="texto-error">{{ obtenerErrorCampo('direccion') }}</div>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Pie del modal fijo -->
+      <div class="pie-modal">
+        <button type="button" class="boton-cancelar" (click)="cerrarModal()">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button 
+          type="button"
+          class="boton-guardar" 
+          (click)="alEnviar()"
+          [disabled]="formularioPaciente.invalid || cargando"
+        >
+          <span *ngIf="cargando">
+            <i class="fas fa-spinner fa-spin"></i> Guardando...
+          </span>
+          <span *ngIf="!cargando">
+            <i class="fas fa-save"></i> {{ modoEdicion ? 'Actualizar' : 'Crear' }} Paciente
+          </span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Vista de detalles del paciente -->
+  <div class="tarjeta-principal" *ngIf="vistaActual === 'detalle'">
+    <div class="encabezado-detalle">
+      <h3>Información Completa del Paciente</h3>
+      <div class="acciones-detalle">
+        <button class="boton-editar" (click)="editarPaciente(pacienteSeleccionado!)">
+          <i class="fas fa-edit"></i> Editar Información
+        </button>
+        <button class="boton-volver" (click)="mostrarLista()">
+          <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </button>
+      </div>
+    </div>
+
+    <div class="grilla-detalle" *ngIf="pacienteSeleccionado">
+      <div class="elemento-detalle">
+        <label>Nombre Completo:</label>
+        <span>{{ pacienteSeleccionado.nombres }} {{ pacienteSeleccionado.apellidos }}</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>CUI:</label>
+        <span>{{ pacienteSeleccionado.cui }}</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>Edad:</label>
+        <span>{{ calcularEdad(pacienteSeleccionado.fechanacimiento) }} años</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>Género:</label>
+        <span>{{ pacienteSeleccionado.genero === 'M' ? 'Masculino' : 'Femenino' }}</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>Teléfono Personal:</label>
+        <span>{{ pacienteSeleccionado.telefonopersonal || 'No registrado' }}</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>Tipo de Consulta:</label>
+        <span>{{ pacienteSeleccionado.tipoconsulta }}</span>
+      </div>
+      <div class="elemento-detalle">
+        <label>Municipio:</label>
+        <span>{{ pacienteSeleccionado.municipio }}</span>
+      </div>
+      <div class="elemento-detalle ancho-completo">
+        <label>Dirección Completa:</label>
+        <span>{{ pacienteSeleccionado.direccion }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de expediente médico -->
+  <div *ngIf="vistaActual === 'modal-expediente'" class="contenedor-modal-expediente">
+    <div class="contenedor-modal-expediente">
+      <div class="encabezado-modal-expediente">
+        <h3>Crear Expediente Médico</h3>
+        <button class="cerrar-modal" (click)="cerrarModalExpediente()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="contenido-modal-expediente">
+        <app-expediente-lista 
+          [mostrarComoModal]="true"
+          [datosPaciente]="datosExpedientePaciente"
+          (cerrarModal)="cerrarModalExpediente()"
+          (expedienteCreado)="cerrarModalExpediente($event)">
+        </app-expediente-lista>
+      </div>
+    </div>
+  </div>
+
+</div>

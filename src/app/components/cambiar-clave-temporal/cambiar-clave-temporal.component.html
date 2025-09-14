@@ -1,0 +1,170 @@
+<div class="full-screen-container">
+  <div class="header-container">
+    <div class="logo-section">
+      <img src="assets/img/LogoFraijanes.png" alt="Municipalidad de Fraijanes" class="municipality-logo">
+      <div class="municipality-text"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="welcome-section">
+      <div class="avatar">
+        <i class="fas fa-key"></i>
+      </div>
+      <h2 class="welcome-title">¡Actualiza tu contraseña!</h2>
+      <p class="welcome-subtitle">Por seguridad, es necesario que cambies tu contraseña temporal por una nueva</p>
+    </div>
+
+    <div class="form-section">
+      <div class="form-header">
+        <h2 class="form-title">Cambiar Contraseña</h2>
+        <p class="form-subtitle">Ingresa tu información para continuar</p>
+      </div>
+
+      <form [formGroup]="cambiarClaveForm" (ngSubmit)="onSubmit()">
+        <!-- Campo Usuario (readonly) -->
+        <div class="form-group">
+          <label class="form-label">Usuario</label>
+          <input 
+            type="text" 
+            class="form-input readonly" 
+            formControlName="usuario"
+            readonly>
+        </div>
+
+        <!-- Contraseña Temporal -->
+        <div class="form-group">
+          <label class="form-label">Contraseña Temporal</label>
+          <div class="input-container">
+            <input 
+              type="password" 
+              class="form-input" 
+              [class.error]="claveActual?.invalid && claveActual?.touched"
+              formControlName="claveActual"
+              [type]="showPassword ? 'text' : 'password'"
+              placeholder="Ingresa la contraseña temporal">
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility('current')">
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div 
+            class="error-message" 
+            *ngIf="claveActual?.invalid && claveActual?.touched"
+            [style.display]="'flex'">
+            <i class="fas fa-exclamation-circle"></i>
+            La contraseña temporal es requerida
+          </div>
+        </div>
+
+        <!-- Nueva Contraseña -->
+        <div class="form-group">
+          <label class="form-label">Nueva Contraseña</label>
+          <div class="input-container">
+            <input 
+              type="password" 
+              class="form-input" 
+              [class.error]="claveNueva?.invalid && claveNueva?.touched"
+              formControlName="claveNueva"
+              [type]="showNewPassword ? 'text' : 'password'"
+              placeholder="Nueva contraseña (8-12 caracteres)">
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility('new')">
+              <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div 
+            class="error-message" 
+            *ngIf="claveNueva?.invalid && claveNueva?.touched"
+            [style.display]="'flex'">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="claveNueva?.errors?.['required']">
+              La nueva contraseña es requerida
+            </span>
+            <span *ngIf="claveNueva?.errors?.['minlength'] || claveNueva?.errors?.['maxlength']">
+              La contraseña debe tener entre 8 y 12 caracteres
+            </span>
+            <span *ngIf="claveNueva?.errors?.['passwordComplexity']">
+              Debe contener: mayúscula, minúscula, número y símbolo (&#64;$!%*?&amp;)
+            </span>
+          </div>
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div class="form-group">
+          <label class="form-label">Confirmar Nueva Contraseña</label>
+          <div class="input-container">
+            <input 
+              type="password" 
+              class="form-input" 
+              [class.error]="confirmarClave?.invalid && confirmarClave?.touched"
+              formControlName="confirmarClave"
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              placeholder="Confirma tu nueva contraseña">
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility('confirm')">
+              <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div 
+            class="error-message" 
+            *ngIf="confirmarClave?.invalid && confirmarClave?.touched"
+            [style.display]="'flex'">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="confirmarClave?.errors?.['required']">
+              Confirma tu nueva contraseña
+            </span>
+            <span *ngIf="confirmarClave?.errors?.['passwordMismatch']">
+              Las contraseñas no coinciden
+            </span>
+          </div>
+        </div>
+
+        <!-- Requisitos de contraseña -->
+        <div class="requirements-card">
+          <div class="requirements-header">
+            <h4 class="requirements-title">Requisitos de la contraseña:</h4>
+            <div class="tooltip-container" 
+                (mouseenter)="onMouseEnter()" 
+                (mouseleave)="onMouseLeave()">
+              <i class="fas fa-info-circle info-icon"></i>
+              
+              <!-- Tooltip -->
+              <div class="tooltip" [class.show]="showTooltip">
+                <ul class="requirements-list">
+                  <li><i class="fas fa-check-circle"></i> Entre 8 y 12 caracteres</li>
+                  <li><i class="fas fa-check-circle"></i> Al menos una letra mayúscula</li>
+                  <li><i class="fas fa-check-circle"></i> Al menos una letra minúscula</li>
+                  <li><i class="fas fa-check-circle"></i> Al menos un número</li>
+                  <li><i class="fas fa-check-circle"></i> Al menos un símbolo (&#64;$!%*?&amp;)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="submit-button"
+          [class.loading]="isLoading"
+          [disabled]="cambiarClaveForm.invalid || isLoading">
+          <span class="button-content" *ngIf="!isLoading">
+            Cambiar Contraseña
+          </span>
+          <span class="button-content" *ngIf="isLoading">
+            <div class="spinner"></div>
+            Cambiando...
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>

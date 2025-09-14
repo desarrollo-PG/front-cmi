@@ -1,0 +1,63 @@
+<!-- menu.component.html -->
+<div class="menu-layout" [class.sidebar-expanded]="sidebarExpanded">
+  
+  <!-- ✅ ACTUALIZAR: Agregar los eventos al sidebar -->
+  <app-sidebar 
+    [userInfo]="userInfo"
+    [isExpanded]="sidebarVisible"
+    (toggleSidebar)="onSidebarToggle($event)"
+    (menuItemClick)="onSidebarMenuItemClick($event)">
+  </app-sidebar>
+  
+  <!-- Contenido del menú -->
+  <div class="menu-container">
+    <!-- Encabezado -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="assets/img/LogoFraijanes.png" alt="Logo Fraijanes" class="logo">
+          <div class="header-text">
+            <h1 class="title">MENÚ PRINCIPAL</h1>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Menú principal con botones -->
+    <main class="main-content">
+      <div class="menu-grid">
+        <button 
+          *ngFor="let item of menuItems" 
+          class="menu-item" 
+          (click)="onMenuItemClick(item)"
+          (mouseenter)="onMouseEnter($event, item)"
+          (mouseleave)="onMouseLeave()"
+          (mousemove)="onMouseMove($event)">
+          <div class="icon-wrapper">
+            <i [class]="item.icon"></i>
+          </div>
+        </button>
+      </div>
+    </main>
+
+    <!-- Tooltip (texto flotante al pasar el mouse) -->
+    <div 
+      class="tooltip" 
+      *ngIf="hoveredItem"
+      [style.left.px]="tooltipPosition.x"
+      [style.top.px]="tooltipPosition.y">
+      {{ hoveredItem.tooltip }}
+    </div>
+
+    <!-- Modal (detalle del botón) -->
+    <div class="modal-backdrop" *ngIf="modalVisible" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>{{ selectedItem?.title }}</h2>
+        <p>{{ selectedItem?.description }}</p>
+        <button class="close-btn" (click)="closeModal()">Cerrar</button>
+      </div>
+    </div>
+
+  </div> <!-- Fin de menu-container -->
+
+</div> <!-- Fin de menu-layout -->

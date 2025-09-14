@@ -1,0 +1,986 @@
+/* historialMedico.component.scss - VERSIÓN MEJORADA */
+
+/* ====================================
+   ESTRUCTURA PRINCIPAL
+   ==================================== */
+.content-area {
+  padding: 20px;
+  min-height: calc(100vh - 80px);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-left: 70px;
+  transition: margin-left 0.3s ease;
+  box-sizing: border-box;
+}
+
+.content-area.sidebar-expanded {
+  margin-left: 280px;
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    margin-left: 0 !important;
+    padding: 15px;
+  }
+}
+
+/* ====================================
+   ENCABEZADO
+   ==================================== */
+.header {
+  background-color: #2c6662;
+  color: white;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.header-content {
+  width: 100%;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.logo {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  height: 60px;
+  z-index: 10;
+}
+
+/* ====================================
+   TARJETAS DE CONTROL
+   ==================================== */
+.control-card {
+  background: rgba(240, 240, 240, 0.95);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.patient-info {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+}
+
+.patient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.patient-details h2 {
+  color: #2c6662;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.patient-details p {
+  color: #666;
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.btn-back {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.btn-back:hover {
+  background: linear-gradient(135deg, #545b62, #495057);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+}
+
+/* ====================================
+   TARJETA PRINCIPAL
+   ==================================== */
+.main-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.historial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.historial-header h3 {
+  color: #2c6662;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-nueva-sesion {
+  background: linear-gradient(135deg, #5ba892, #4a9d7e);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 8px rgba(91, 168, 146, 0.3);
+}
+
+.btn-nueva-sesion:hover {
+  background: linear-gradient(135deg, #4a9d7e, #3e8a6b);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(91, 168, 146, 0.4);
+}
+
+/* ====================================
+   GRILLA DE SESIONES
+   ==================================== */
+.sesiones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.sesion-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sesion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, #2c6662, #5ba892);
+}
+
+.sesion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border-color: #2c6662;
+}
+
+.sesion-fecha {
+  color: #2c6662;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  background: rgba(44, 102, 98, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.sesion-content h4 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.sesion-motivo {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 15px 0;
+}
+
+.sesion-doctor {
+  color: #5ba892;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+
+/* ====================================
+   STATUS DE SESIÓN
+   ==================================== */
+.sesion-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.status-diagnostico {
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  
+  &.completado {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+}
+
+.btn-eliminar {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  }
+  
+  i {
+    font-size: 14px;
+  }
+}
+
+/* ====================================
+   ESTADOS ESPECIALES
+   ==================================== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.loading-state i {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: #5ba892;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-style: italic;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.empty-state::before {
+  content: '📋';
+  font-size: 48px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+/* ====================================
+   MODALES
+   ==================================== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-diagnostico {
+  max-width: 1000px;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #2c6662, #1f4540);
+  color: white;
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 15px 15px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px;
+  max-height: calc(90vh - 140px);
+}
+
+.modal-footer {
+  background: #f8f9fa;
+  padding: 20px 25px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 15px 15px;
+  flex-shrink: 0;
+}
+
+/* ====================================
+   FORMULARIOS
+   ==================================== */
+.patient-summary {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-left: 4px solid #2c6662;
+}
+
+.patient-summary h4 {
+  color: #2c6662;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.patient-summary h3 {
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.patient-summary p {
+  color: #666;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.important-note {
+  background: #fff3cd;
+  color: #856404;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+  margin: 15px 0;
+}
+
+.session-date {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 15px;
+}
+
+.sesion-form,
+.diagnostico-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-input,
+.form-textarea {
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #2c6662;
+  box-shadow: 0 0 0 3px rgba(44, 102, 98, 0.1);
+}
+
+.form-input.invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.motivo-input {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 15px 20px;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.area-evolucion {
+  min-height: 150px;
+}
+
+.diagnostico-tratamiento {
+  min-height: 150px;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* ====================================
+   DIAGNÓSTICO
+   ==================================== */
+.diagnostico-header {
+  margin-bottom: 20px;
+}
+
+.diagnostico-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.doctor-input,
+.expediente-input {
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+}
+
+/* ====================================
+   ARCHIVOS
+   ==================================== */
+.files-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px dashed #dee2e6;
+}
+
+.file-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+}
+
+.btn-upload {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-upload:hover {
+  background: linear-gradient(135deg, #20c997, #17a2b8);
+  transform: translateY(-1px);
+}
+
+/* ====================================
+   BOTONES
+   ==================================== */
+.btn-cancelar {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancelar:hover {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+.btn-aceptar,
+.btn-guardar {
+  background: linear-gradient(135deg, #2c6662, #1f4540);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-aceptar:hover,
+.btn-guardar:hover {
+  background: linear-gradient(135deg, #1f4540, #174239);
+  transform: translateY(-1px);
+}
+
+.btn-aceptar:disabled,
+.btn-guardar:disabled,
+.btn-upload:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ====================================
+   ANIMACIONES
+   ==================================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9) translateY(-30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* ====================================
+   RESPONSIVE
+   ==================================== */
+@media (max-width: 992px) {
+  .sesiones-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  
+  .diagnostico-inputs,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .historial-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .sesiones-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    margin: 10px;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-cancelar,
+  .btn-aceptar,
+  .btn-guardar {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+  
+  .patient-details h2 {
+    font-size: 20px;
+  }
+  
+  .sesion-card {
+    padding: 15px;
+  }
+  
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .main-card,
+  .patient-info,
+  .control-card {
+    padding: 20px;
+  }
+}
+
+/* ====================================
+   TARJETA DE INFORMACIÓN DEL PACIENTE
+   ==================================== */
+.patient-info-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 2px solid #5ba892;
+}
+
+.patient-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 25px;
+}
+
+.patient-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2c6662, #5ba892);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+  box-shadow: 0 4px 12px rgba(44, 102, 98, 0.3);
+}
+
+.patient-basic-info {
+  flex: 1;
+}
+
+.patient-basic-info h2 {
+  color: #2c6662;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+
+.expediente-number {
+  color: #5ba892;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 5px 0;
+  background: rgba(91, 168, 146, 0.1);
+  padding: 5px 12px;
+  border-radius: 15px;
+  display: inline-block;
+}
+
+.patient-age {
+  color: #666;
+  font-size: 14px;
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+.patient-description {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 15px 0 0 0;
+  font-style: italic;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #5ba892;
+}
+
+/* ====================================
+   RESPONSIVE PARA TARJETA DE PACIENTE
+   ==================================== */
+@media (max-width: 768px) {
+  .patient-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .avatar-circle {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+  
+  .patient-basic-info h2 {
+    font-size: 24px;
+  }
+  
+  .expediente-number {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-info-card {
+    padding: 20px;
+  }
+  
+  .avatar-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .patient-basic-info h2 {
+    font-size: 20px;
+  }
+  
+  .patient-description {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+/* Estilos para la columna de acciones consolidada */
+.columna-acciones {
+  min-width: 180px;
+  padding: 8px;
+}
+
+.contenedor-acciones {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.boton-accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: white;
+}
+
+.boton-accion:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.boton-accion:active {
+  transform: translateY(0);
+}
+
+/* Colores específicos para cada tipo de acción */
+.boton-historial {
+  background-color: #3b82f6; /* Azul */
+}
+
+.boton-historial:hover {
+  background-color: #2563eb;
+}
+
+.boton-editar {
+  background-color: #10b981; /* Verde */
+}
+
+.boton-editar:hover {
+  background-color: #059669;
+}
+
+.boton-crear-expediente {
+  background-color: #f59e0b; /* Naranja */
+}
+
+.boton-crear-expediente:hover {
+  background-color: #d97706;
+}
+
+.boton-ver-expediente {
+  background-color: #6366f1; /* Índigo */
+}
+
+.boton-ver-expediente:hover {
+  background-color: #4f46e5;
+}
+
+.boton-eliminar {
+  background-color: #ef4444; /* Rojo */
+}
+
+.boton-eliminar:hover {
+  background-color: #dc2626;
+}
+
+/* Responsive: En pantallas pequeñas, apilar los botones */
+@media (max-width: 768px) {
+  .contenedor-acciones {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .boton-accion {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}

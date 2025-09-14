@@ -1,0 +1,15 @@
+//global.scss
+
+@use './variables' as *;
+
+body {
+  margin: 0;
+  font-family: $font-family-base;
+  background-color: $background-color;
+  color: #333;
+}
+
+a {
+  text-decoration: none;
+  color: $primary-color;
+}

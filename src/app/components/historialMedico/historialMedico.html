@@ -1,0 +1,280 @@
+<!--  historialMedico/historialMedico.html - VERSIÓN ACTUALIZADA -->
+<div class="content-area" [class.sidebar-expanded]="sidebarExpanded">
+  <app-sidebar [userInfo]="userInfo"></app-sidebar>
+  
+  <div class="menu-container">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="header-text">
+            <h1 class="title">Historial Clínico</h1>
+          </div>
+          <img src="assets/img/LogoFraijanes.png" alt="Logo Fraijanes" class="logo">
+        </div>
+      </div>
+    </header>
+    
+  </div>
+
+  <!-- ✅ NUEVA SECCIÓN: Información del paciente fuera del modal -->
+  <div class="patient-info-card" *ngIf="infoPaciente">
+    <div class="patient-card-header">
+      <div class="patient-avatar">
+        <div class="avatar-circle">
+          <i class="fas fa-user"></i>
+        </div>
+      </div>
+      <div class="patient-basic-info">
+        <h2>{{ infoPaciente.nombres }} {{ infoPaciente.apellidos }}</h2>
+        <p class="expediente-number" *ngIf="infoPaciente.expedientes && infoPaciente.expedientes.length > 0">
+          Expediente N°. {{ infoPaciente.expedientes[0].numeroexpediente }}
+        </p>
+        <p class="patient-age" *ngIf="infoPaciente.fechanacimiento">
+          Edad: {{ historialService.calcularEdad(infoPaciente.fechanacimiento) }} años
+        </p>
+
+      </div>
+      <button class="btn-back" (click)="volver()">
+        <i class="fas fa-arrow-left"></i> Volver
+      </button>
+    </div>
+  </div>
+
+  <!-- VISTA HISTORIAL -->
+  <div class="main-card" *ngIf="currentView === 'historial'">
+    <div class="historial-header">
+      <h3>Historial de Sesiones</h3>
+      <button class="btn-nueva-sesion" (click)="mostrarNuevaSesion()">
+        <i class="fas fa-plus"></i> Nueva Sesión
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      Cargando historial...
+    </div>
+
+    <div class="sesiones-grid" *ngIf="!loading">
+      <div 
+        class="sesion-card" 
+        *ngFor="let sesion of historialSesiones"
+        (click)="mostrarDiagnostico(sesion)"
+      >
+        <div class="sesion-fecha">
+          {{ formatearFecha(sesion.fecha) }}
+        </div>
+        <div class="sesion-content">
+          <h4>Control y registro de sesiones</h4>
+          <p class="sesion-motivo">{{ sesion.motivoconsulta | slice:0:100 }}...</p>
+          <div class="sesion-doctor" *ngIf="sesion.usuario">
+            Dr. {{ sesion.usuario.nombres }} {{ sesion.usuario.apellidos }}
+          </div>
+        </div>
+        <div class="sesion-status">
+          <span class="status-diagnostico" [class.completado]="sesion.diagnosticotratamiento">
+            Diagnóstico
+          </span>
+          <button 
+            class="btn-eliminar" 
+            (click)="eliminarSesion(sesion); $event.stopPropagation()"
+            title="Eliminar sesión"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="historialSesiones.length === 0" class="empty-state">
+        <p>No hay sesiones registradas para este paciente</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVA SESION - ACTUALIZADO -->
+  <div class="modal-backdrop" *ngIf="currentView === 'nueva-sesion'" (click)="mostrarHistorial()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <h3>Control y Registro de sesiones</h3>
+        <button class="modal-close" (click)="mostrarHistorial()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- ✅ Información importante del día -->
+        
+        <div class="session-date">
+          <strong>Sesión de hoy {{ currentDate | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <!-- ✅ FORMULARIO COMPLETO -->
+        <form [formGroup]="sesionForm" class="sesion-form">
+          <div class="form-group">
+            <input 
+              type="text" 
+              formControlName="motivoconsulta"
+              class="form-input motivo-input"
+              [class.invalid]="isFieldInvalid(sesionForm, 'motivoconsulta')"
+              placeholder="Motivo de consulta"
+            >
+            <div class="error-message" *ngIf="isFieldInvalid(sesionForm, 'motivoconsulta')">
+              {{ getFieldError(sesionForm, 'motivoconsulta') }}
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <textarea 
+                formControlName="notaconsulta"
+                class="form-textarea"
+                rows="4"
+                placeholder="Médico agrega sus notas y/o comentarios de la sesión del día."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <textarea 
+                formControlName="recordatorio"
+                class="form-textarea"
+                rows="4"
+                placeholder="Médico puede agregar recordatorios importantes para próximas sesiones."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- ✅ NUEVOS CAMPOS REQUERIDOS -->
+          <div class="form-group">
+            <textarea 
+              formControlName="evolucion"
+              class="form-textarea"
+              rows="3"
+              placeholder="Desarrollo de la infección o evolución del paciente"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <textarea 
+              formControlName="diagnosticotratamiento"
+              class="form-textarea"
+              rows="3"
+              placeholder="Diagnóstico y tratamiento aplicado"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancelar" (click)="mostrarHistorial()">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          class="btn-aceptar" 
+          (click)="crearSesion()"
+          [disabled]="sesionForm.invalid || loading"
+        >
+          <span *ngIf="loading">
+            <i class="fas fa-spinner fa-spin"></i> Guardando...
+          </span>
+          <span *ngIf="!loading">Aceptar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DIAGNOSTICO - Sin cambios -->
+  <div class="modal-backdrop" *ngIf="currentView === 'diagnostico'" (click)="mostrarHistorial()">
+    <div class="modal-content modal-diagnostico" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <h3>Diagnóstico Clínico</h3>
+        <button class="modal-close" (click)="mostrarHistorial()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="diagnostico-header" *ngIf="sesionActual && infoPaciente">
+          <div class="diagnostico-inputs">
+            <input 
+              type="text" 
+              [value]="sesionActual.usuario?.nombres + ' ' + sesionActual.usuario?.apellidos" 
+              class="doctor-input"
+              readonly
+            >
+            <input 
+              type="text" 
+              [value]="'Expediente N°. ' + (infoPaciente.expedientes && infoPaciente.expedientes.length > 0 ? infoPaciente.expedientes[0].numeroexpediente : 'N/A')" 
+              class="expediente-input"
+              readonly
+            >
+          </div>
+        </div>
+
+        <form [formGroup]="diagnosticoForm" class="diagnostico-form">
+          <div class="form-group">
+            <textarea 
+              formControlName="evolucion"
+              class="form-textarea area-evolucion"
+              rows="6"
+              placeholder="Área de evolución del paciente"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <textarea 
+              formControlName="diagnosticotratamiento"
+              class="form-textarea diagnostico-tratamiento"
+              rows="6"
+              placeholder="Diagnóstico y Tratamiento"
+            ></textarea>
+          </div>
+
+          <div class="files-section">
+            <input 
+              type="file" 
+              id="archivos"
+              multiple 
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              (change)="onFilesSelected($event)"
+              class="file-input"
+            >
+            
+            <button 
+              type="button" 
+              class="btn-upload" 
+              *ngIf="selectedFiles && selectedFiles.length > 0"
+              (click)="subirArchivos()"
+              [disabled]="loading"
+            >
+              <span *ngIf="loading">
+                <i class="fas fa-spinner fa-spin"></i> Subiendo...
+              </span>
+              <span *ngIf="!loading">
+                <i class="fas fa-upload"></i> Subir {{ selectedFiles.length }} archivo(s)
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancelar" (click)="mostrarHistorial()">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          class="btn-guardar" 
+          (click)="guardarDiagnostico()"
+          [disabled]="loading"
+        >
+          <span *ngIf="loading">
+            <i class="fas fa-spinner fa-spin"></i> Guardando...
+          </span>
+          <span *ngIf="!loading">Guardar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

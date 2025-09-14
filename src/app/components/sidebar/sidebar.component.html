@@ -1,0 +1,55 @@
+<!-- sidebar.component.html -->
+<div class="sidebar-container" [class.expanded]="isExpanded" [class.collapsed]="!isExpanded">
+  <div class="sidebar-header">
+    <div class="user-info" *ngIf="isExpanded">
+      <div class="user-avatar">
+        <img *ngIf="userInfo.avatar" [src]="userInfo.avatar" [alt]="userInfo.name">
+        <i *ngIf="!userInfo.avatar" class="fas fa-user-circle"></i>
+      </div>
+      <div class="user-name" (click)="onUserNameClick()" style="cursor: pointer;">{{ userInfo.name }}</div>
+    </div>
+
+    <button class="toggle-button" (click)="onToggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-divider" *ngIf="isExpanded"></div>
+
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li class="nav-item" *ngFor="let item of currentMenuItems">
+        <!-- Item principal -->
+        <div class="nav-link"
+             [class.has-children]="item.children?.length"
+             [class.expanded]="item.expanded"
+             (click)="onMenuItemClick(item)">
+          <div class="nav-link-content">
+            <i *ngIf="item.icon" [class]="item.icon" class="nav-icon"></i>
+            <span class="nav-label" *ngIf="isExpanded">{{ item.label }}</span>
+          </div>
+          <i *ngIf="item.children?.length && isExpanded" 
+             class="fas fa-chevron-down expand-icon"
+             [class.rotated]="item.expanded"></i>
+        </div>
+
+        <!-- Submenú -->
+        <ul class="submenu"
+            *ngIf="item.children?.length && item.expanded && isExpanded">
+          <li class="submenu-item" *ngFor="let subItem of item.children">
+            <div class="submenu-link" (click)="onSubMenuItemClick(subItem)">
+              <i *ngIf="subItem.icon" [class]="subItem.icon" class="submenu-icon"></i>
+              <span class="submenu-label">{{ subItem.label }}</span>
+            </div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer" *ngIf="isExpanded">
+    <p class="footer-text">{{ footerText }}</p>
+  </div>
+</div>
+
+<div class="sidebar-overlay" *ngIf="isExpanded" (click)="onToggleSidebar()"></div>
