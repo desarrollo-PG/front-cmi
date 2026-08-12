@@ -169,6 +169,10 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
   citasDiaSeleccionado: CitaRequest[] = [];
   selectedMedico: string = '';
   isSelectDisabled: boolean = false;
+  // Distingue el filtro auto-asignado al cargar la pagina (puede caer a "Todos"
+  // si el medico no tiene citas) de una seleccion manual del usuario (esa nunca
+  // se debe revertir, aunque el medico elegido no tenga citas en el mes visible).
+  private filtroEsAutomatico: boolean = false;
   currentView: string = 'dayGridMonth';
   loading = false;
   estadoSeleccionado: 'confirmada' | 'no-presentara' | null = null;
@@ -183,7 +187,11 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
   usuario: Usuario[] = [];
   paciente: Paciente[] = [];
   private calendarApi: any = null;
-  private readonly ROLES_PROFESIONAL: number[] = [5, 6, 10, 12, 13, 15];
+  // Por NOMBRE, no por ID: el idrol de cada uno cambia entre entornos e incluso
+  // entre momentos distintos del mismo entorno (ya se ha confirmado mas de una vez).
+  private readonly ROLES_PROFESIONAL_NOMBRES: string[] = [
+    'Fisioterapeuta', 'Medico General', 'Psicólogo', 'Odontólogo', 'Nutricionista', 'Psicopedagogo'
+  ];
 
   showModalReporte = false;
   reporteTransportes: any[] = [];
@@ -288,22 +296,23 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
       const usuarioData = localStorage.getItem('usuario');
       if (usuarioData) {
         const usuario = JSON.parse(usuarioData);
-        const esAdministrador = usuario.rol === 'administrador' || 
-                              usuario.rol === 'admin' ||
-                              usuario.fkrol === 1 ||
-                              usuario.idusuario === 1;
-        
+        // Por nombre de rol, no por ID (idrol cambia entre entornos y momentos)
+        const esAdministrador = usuario.rol?.nombre === 'Administrador' || usuario.rol?.nombre === 'Sistemas';
+
         if (!esAdministrador && usuario.idusuario) {
           this.selectedMedico = usuario.idusuario.toString();
           this.isSelectDisabled = true;
+          this.filtroEsAutomatico = true;
         } else {
           this.selectedMedico = '';
           this.isSelectDisabled = false;
+          this.filtroEsAutomatico = false;
         }
       }
     } catch (error) {
       this.selectedMedico = '';
       this.isSelectDisabled = false;
+      this.filtroEsAutomatico = false;
     }
   }
 
@@ -393,11 +402,11 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const usuario = JSON.parse(usuarioData);
-    const usuarioRol = usuario.fkrol;
+    const usuarioRolNombre = usuario.rol?.nombre;
 
     this.loadingUsuarios = true;
 
-    if(usuarioRol == 2 || usuarioRol == 6 || usuarioRol == 7 || usuarioRol == 12 || usuarioRol == 13 || usuarioRol == 15){
+    if(this.ROLES_PROFESIONAL_NOMBRES.includes(usuarioRolNombre)){
       const currentUserId = this.getCurrentUserId();
       this.selectedMedico = currentUserId;
 
@@ -426,7 +435,7 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
                       ...responseUsuario.data,
                       nombreCompleto: `Dr. ${responseUsuario.data.nombres} ${responseUsuario.data.apellidos}`.trim()
                     };
-                    this.usuario.unshift(usuarioConNombre);
+                    this.usuario = [usuarioConNombre, ...this.usuario];
                     this.filtrarPorMedico();
                     this.loadingUsuarios = false;
                     
@@ -463,10 +472,17 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     } else {
-      // Usuario administrador - puede seleccionar cualquier profesional
-      this.isSelectDisabled = false;
-      this.citaForm.get('fkusuario')?.enable();
-      
+      // Solo el administrador real desbloquea el selector; el resto (personal de
+      // apoyo que no es profesional clinico ni admin) se queda con el bloqueo que
+      // ya aplico configurarFiltroAutomatico(), y cargarCitas() lo hara caer a
+      // "Todos los profesionales" en cuanto vea que no tiene citas propias.
+      const esAdministrador = usuario.rol?.nombre === 'Administrador' || usuario.rol?.nombre === 'Sistemas';
+
+      if (esAdministrador) {
+        this.isSelectDisabled = false;
+        this.citaForm.get('fkusuario')?.enable();
+      }
+
       this.UsuarioService.obtenerProfesionalesAgenda().subscribe({
         next: (response) => {
           if (response.success && response.data) {
@@ -729,8 +745,20 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.agendaService.obtenerCitas().subscribe({
         next: (citas: CitaRequest[]) => {
+          // Si el filtro automático (médico sin citas propias) no encuentra nada, mostrar
+          // todos. Solo aplica mientras el filtro sigue siendo el asignado automáticamente
+          // al cargar la página — una selección manual del usuario nunca se revierte,
+          // aunque el médico elegido no tenga citas en el mes visible.
+          if (this.filtroEsAutomatico && this.selectedMedico && this.isSelectDisabled) {
+            const tieneCitasPropias = citas.some((c: CitaRequest) => c.fkusuario.toString() === this.selectedMedico);
+            if (!tieneCitasPropias) {
+              this.selectedMedico = '';
+            }
+            this.filtroEsAutomatico = false;
+          }
+
           // Filtrar por médico si está seleccionado
-          const citasFiltradas = this.selectedMedico 
+          const citasFiltradas = this.selectedMedico
             ? citas.filter((c: CitaRequest) => c.fkusuario.toString() === this.selectedMedico)
             : citas;
           
@@ -862,13 +890,7 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Obtener el usuario actual
     const usuarioData = localStorage.getItem('usuario');
     const usuario = usuarioData ? JSON.parse(usuarioData) : null;
-    const usuarioRol = usuario?.fkrol;
-    
-    // Determinar si debe pre-seleccionar usuario
-    let usuarioPreseleccionado = '';
-    if (usuarioRol == 2 || usuarioRol == 6 || usuarioRol == 7 || usuarioRol == 12 || usuarioRol == 13 || usuarioRol == 15) {
-      usuarioPreseleccionado = this.getCurrentUserId();
-    }
+    const usuarioRolNombre = usuario?.rol?.nombre;
 
     // Resetear formulario con o sin usuario pre-seleccionado
     this.citaForm.reset({
@@ -885,21 +907,27 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
       contactoEncargado: ''
     });
 
-    if (this.ROLES_PROFESIONAL.includes(usuarioRol)) {
-      const currentUserId = parseInt(this.getCurrentUserId());
-      if (this.usuario.length > 0) {
-        this.citaForm.get('fkusuario')?.setValue(currentUserId);
-      } else {
-        const interval = setInterval(() => {
-          if (this.usuario.length > 0) {
-            this.citaForm.get('fkusuario')?.setValue(currentUserId);
-            clearInterval(interval);
-          }
-        }, 100);
-      }
-    }
-
     this.showModal = true;
+
+    // Preseleccionar profesional. Se difiere con setTimeout para que el ng-select
+    // del modal ya exista en el DOM y haya procesado [items] antes de asignarle
+    // un valor (si no, puede quedar visualmente en blanco aunque el FormControl
+    // si tenga el valor correcto).
+    if (this.ROLES_PROFESIONAL_NOMBRES.includes(usuarioRolNombre)) {
+      const currentUserId = parseInt(this.getCurrentUserId());
+      setTimeout(() => {
+        if (this.usuario.some(u => u.idusuario === currentUserId)) {
+          this.citaForm.get('fkusuario')?.setValue(currentUserId);
+        } else {
+          const interval = setInterval(() => {
+            if (this.usuario.some(u => u.idusuario === currentUserId)) {
+              this.citaForm.get('fkusuario')?.setValue(currentUserId);
+              clearInterval(interval);
+            }
+          }, 100);
+        }
+      });
+    }
 
     const calendarApi = selectInfo.view.calendar;
     calendarApi.unselect();
@@ -994,7 +1022,7 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const usuarioData = localStorage.getItem('usuario');
     const usuario = usuarioData ? JSON.parse(usuarioData) : null;
-    const usuarioRol = usuario?.fkrol;
+    const usuarioRolNombre = usuario?.rol?.nombre;
 
     this.citaForm.reset({
       fkpaciente: null,        // null en lugar de '' para ng-select
@@ -1010,25 +1038,29 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
       contactoEncargado: ''
     });
 
-    // Preseleccionar profesional si el rol corresponde
-    if (this.ROLES_PROFESIONAL.includes(usuarioRol)) {
+    this.showModal = true;
+
+    // Preseleccionar profesional si el rol corresponde. Se difiere con setTimeout
+    // para que el ng-select del modal ya exista en el DOM y haya procesado [items]
+    // antes de asignarle un valor (si no, puede quedar visualmente en blanco aunque
+    // el FormControl si tenga el valor correcto).
+    if (this.ROLES_PROFESIONAL_NOMBRES.includes(usuarioRolNombre)) {
       const currentUserId = parseInt(this.getCurrentUserId());
 
-      // Si la lista ya cargó, setear directo
-      if (this.usuario.length > 0) {
-        this.citaForm.get('fkusuario')?.setValue(currentUserId);
-      } else {
-        // Esperar a que cargue la lista
-        const interval = setInterval(() => {
-          if (this.usuario.length > 0) {
-            this.citaForm.get('fkusuario')?.setValue(currentUserId);
-            clearInterval(interval);
-          }
-        }, 100);
-      }
+      setTimeout(() => {
+        if (this.usuario.some(u => u.idusuario === currentUserId)) {
+          this.citaForm.get('fkusuario')?.setValue(currentUserId);
+        } else {
+          // Esperar a que cargue la lista (o el fallback que agrega al usuario actual)
+          const interval = setInterval(() => {
+            if (this.usuario.some(u => u.idusuario === currentUserId)) {
+              this.citaForm.get('fkusuario')?.setValue(currentUserId);
+              clearInterval(interval);
+            }
+          }, 100);
+        }
+      });
     }
-
-    this.showModal = true;
   }
 
   cerrarModal(): void {
@@ -1462,6 +1494,9 @@ export class AgendaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async filtrarPorMedico(): Promise<void> {
+    // El usuario tomo control manual del filtro: ya no se debe revertir a
+    // "Todos los profesionales" aunque el medico elegido no tenga citas.
+    this.filtroEsAutomatico = false;
     await this.cargarCitas();
   }
 

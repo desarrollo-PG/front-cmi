@@ -140,11 +140,11 @@ export class ExpedienteListaComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private establecerFiltroClinicaDefecto(): void {
-    const userRole = this.authService.userRole;
+    const userRoleName = this.authService.userRoleName;
     const user = this.authService.getCurrentUser();
 
-    // Si es Admin (1) o Sistemas (4), mostrar todas las clínicas
-    if (userRole === 1 || userRole === 4) {
+    // Por nombre de rol, no por ID (idrol cambia entre entornos y momentos)
+    if (userRoleName === 'Administrador' || userRoleName === 'Sistemas') {
       this.clinicaSeleccionada = 0;
       return;
     }

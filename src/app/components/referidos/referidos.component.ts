@@ -14,6 +14,7 @@ import { ServicioPaciente, Paciente } from '../../services/paciente.service';
 import { ServicioExpediente, Expediente } from '../../services/expediente.service';
 import { ArchivoService } from '../../services/archivo.service';
 import { PerfilService } from '../../services/perfil.service';
+import { PermisoService } from '../../services/permiso.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AlertaService } from '../../services/alerta.service';
 import { Subscription } from 'rxjs';
@@ -111,7 +112,8 @@ export class ReferidosComponent implements OnInit, AfterViewInit, OnDestroy {
     private alerta: AlertaService,
     private servicioPaciente: ServicioPaciente,
     private archivoService: ArchivoService,
-    private perfilService: PerfilService
+    private perfilService: PerfilService,
+    private permisoService: PermisoService
   ) {
     // FORMULARIO SIN fkusuariodestino
     this.referidoForm = this.fb.group({
@@ -182,9 +184,11 @@ export class ReferidosComponent implements OnInit, AfterViewInit, OnDestroy {
             this.archivoService.obtenerUrlPublica(this.usuarioActual.rutafotoperfil) : null  
         };
         
-        // CORRECCIÓN: Admin es fkrol 1 o 7
-        this.esAdmin = this.usuarioActual.fkrol === 1 || this.usuarioActual.fkrol === 7;
-        
+        // Permiso dinamico (no por ID de rol, que cambia entre entornos)
+        this.permisoService.obtenerMisRutas().subscribe(rutas => {
+          this.esAdmin = rutas.includes('*') || rutas.includes('referidos-autorizar');
+        });
+
         if (this.usuarioActual.fkclinica === undefined || this.usuarioActual.fkclinica === null) {
           this.alerta.alertaPreventiva('Tu usuario no tiene clínica asignada. Contacta al administrador.');
         }
@@ -797,7 +801,7 @@ verDetalleReferido(referido: Referido): void {
 
 async confirmarDesdeDetalle(): Promise<void> {
 
-  if (!this.referidoSeleccionado) {
+  if (!this.referidoSeleccionado || this.subiendoDocumento) {
     return;
   }
 
