@@ -148,6 +148,22 @@
           </div>
         </div>
 
+        <!-- Agenda -->
+        <div *ngIf="puedeVerPestana('reporteria-agenda')" class="stat-card agenda">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Citas</h3>
+            <div class="stat-number">{{ dashboardData.agenda.citasMes }}</div>
+            <div class="stat-details">
+              <span class="detail-item">
+                <i class="fas fa-calendar-alt"></i> Este mes
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- Inventario -->
         <div *ngIf="puedeVerPestana('reporteria-inventario')" class="stat-card inventario">
           <div class="stat-icon">

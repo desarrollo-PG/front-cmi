@@ -270,9 +270,17 @@
     }
   }
 
+  &.agenda {
+    border-left-color: #8e44ad;
+
+    .stat-icon {
+      background: linear-gradient(135deg, #8e44ad, #6c3483);
+    }
+  }
+
   &.inventario {
     border-left-color: #28a745;
-    
+
     .stat-icon {
       background: linear-gradient(135deg, #28a745, #218838);
     }

@@ -1876,3 +1876,53 @@
 ::ng-deep .swal2-shown {
   z-index: 10000000 !important;
 }
+
+/* ====================================
+   OVERLAY DE CARGA - SUBIDA DE DOCUMENTOS
+   ==================================== */
+.loading-overlay {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000000 !important; // Por encima de .modal-content (1000000)
+
+  .loading-content {
+    background: #fff;
+    padding: 24px 32px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 360px;
+
+    i {
+      font-size: 28px;
+      color: #1a8a5c;
+      flex-shrink: 0;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    span {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    small {
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+  }
+}

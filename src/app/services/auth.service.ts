@@ -301,19 +301,4 @@ export class AuthService {
     return !!this.getToken() && !!this.getCurrentUser();
   }
 
-  /**
-   * Verificar si el usuario tiene uno de los roles permitidos
-   */
-  hasRole(rolesPermitidos: number[]): boolean {
-    const userRole = this.userRole;
-    if (!userRole) return false;
-    return rolesPermitidos.includes(userRole);
-  }
-
-  /**
-   * Verificar si el usuario tiene un rol específico
-   */
-  hasSpecificRole(rolId: number): boolean {
-    return this.userRole === rolId;
-  }
 }

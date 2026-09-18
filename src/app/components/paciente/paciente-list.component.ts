@@ -180,15 +180,15 @@ obtenerIniciales(nombres?: string, apellidos?: string): string {
 
   /**
    * Establece el filtro de clínica por defecto según el rol del usuario
-   * - Admin (1) y Sistemas (4): Ver todas las clínicas
+   * - Administrador y Sistemas: Ver todas las clínicas
    * - Otros: Filtrar por su clínica asignada
    */
   private establecerFiltroClinicaDefecto(): void {
-    const userRole = this.authService.userRole;
+    const userRoleName = this.authService.userRoleName;
     const user = this.authService.getCurrentUser();
 
-    // Si es Admin (1) o Sistemas (4), mostrar todas las clínicas
-    if (userRole === 1 || userRole === 4) {
+    // Por nombre de rol, no por ID (idrol cambia entre entornos y momentos)
+    if (userRoleName === 'Administrador' || userRoleName === 'Sistemas') {
       this.clinicaSeleccionada = 0;
       return;
     }
